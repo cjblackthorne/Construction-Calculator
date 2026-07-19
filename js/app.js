@@ -32,6 +32,8 @@ const ICN = {
   cost: '<path d="M4 4 H12 L20 12 L12 20 L4 12 Z"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/>',
   trig: '<line x1="4" y1="12" x2="20" y2="12"/><line x1="5" y1="5" x2="5" y2="19"/><path d="M5 12 Q8 4 11 12 T17 12"/>',
   weight: '<path d="M6 9 h12 l1.4 10 h-14.8 Z"/><path d="M9 9 a3 3 0 0 1 6 0"/>',
+  share: '<circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><line x1="8.1" y1="10.9" x2="15.9" y2="6.1"/><line x1="8.1" y1="13.1" x2="15.9" y2="17.9"/>',
+  pdf: '<path d="M7 3 h7 l4 4 v13 a1 1 0 0 1 -1 1 h-9 a1 1 0 0 1 -1 -1 Z"/><path d="M14 3 v4 h4"/><line x1="9.5" y1="13" x2="14.5" y2="13"/><line x1="9.5" y1="16" x2="14.5" y2="16"/>',
 };
 function svg(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">${ICN[name] || ''}</svg>`;
@@ -41,7 +43,7 @@ document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = svg(el
 /* ---- preferences ---- */
 const prefs = loadPrefs();
 function loadPrefs() {
-  let p = { denom: 16, lengthFmt: 0, theme: 'light', haptics: 'on' };
+  let p = { denom: 16, lengthFmt: 0, theme: 'light', haptics: 'on', sound: 'off' };
   try { Object.assign(p, JSON.parse(localStorage.getItem('concalc.prefs') || '{}')); } catch (e) {}
   return p;
 }
@@ -57,6 +59,33 @@ applyTheme();
 /* short haptic confirmation on key press */
 function buzz() { if (prefs.haptics === 'on' && navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} } }
 
+/* synthesized mechanical key-click (optional) */
+let audioCtx = null;
+function clickSound() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (prefs.sound !== 'on' || !AC) return;
+  try {
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'square'; o.frequency.value = 1400;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.06, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.06);
+  } catch (e) {}
+}
+/* combined tactile + audio confirmation on key press */
+function feedback() { buzz(); clickSound(); }
+
+/* tiny toast */
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1900);
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
 /* keep the screen awake while the app is open (jobsite convenience) */
 let wakeLock = null;
 async function requestWake() {
@@ -69,6 +98,32 @@ const calc = new Calculator(prefs);
 try {
   const t = JSON.parse(localStorage.getItem('concalc.tape') || '[]'); if (Array.isArray(t)) calc.tape = t;
 } catch (e) {}
+
+/* local-first: restore the in-progress calculation so nothing is lost on reload */
+function restoreState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('concalc.state') || 'null');
+    if (s && typeof s === 'object') {
+      calc.tokens = Array.isArray(s.tokens) ? s.tokens : [];
+      calc.curNum = s.curNum || '';
+      calc.acc = s.acc || null;
+      calc.op = s.op || null;
+      calc.freshResult = !!s.freshResult;
+      if (Array.isArray(s.memories) && s.memories.length === 4) calc.memories = s.memories;
+    }
+  } catch (e) {}
+}
+let sharedView = false;
+function persistState() {
+  if (sharedView) return;
+  try {
+    localStorage.setItem('concalc.state', JSON.stringify({
+      tokens: calc.tokens, curNum: calc.curNum, acc: calc.acc, op: calc.op,
+      freshResult: calc.freshResult, memories: calc.memories,
+    }));
+  } catch (e) {}
+}
+restoreState();
 
 /* ============================ length formatting ============================ */
 const LEN_FORMATS = ['fif', 'ft', 'in', 'yd', 'metric'];
@@ -114,12 +169,13 @@ function renderCalc() {
   if (calc.op) badges.push({ '+': '+', '-': '−', '*': '×', '/': '÷' }[calc.op]);
   calc.memories.forEach((m, i) => { if (m) badges.push('M' + (i + 1)); });
   badgeEl.innerHTML = badges.map((b) => `<span class="badge">${b}</span>`).join('');
+  persistState();
 }
 
 /* keypad handling */
 $('keypad').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
-  buzz();
+  feedback();
   if (b.dataset.act === 'frac') { openFracSheet(); return; }
   if (b.dataset.d !== undefined) calc.inputDigit(b.dataset.d);
   else if (b.dataset.dot !== undefined) calc.inputDot();
@@ -132,7 +188,7 @@ $('keypad').addEventListener('click', (e) => {
 
 document.querySelector('.keys.fn').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
-  buzz();
+  feedback();
   const act = b.dataset.act;
   if (act === 'ac') calc.allClear();
   else if (act === 'back') calc.backspace();
@@ -202,7 +258,7 @@ function openFracSheet() {
   fractionList(prefs.denom).forEach((f) => {
     const btn = document.createElement('button');
     btn.textContent = f.num + '/' + f.den;
-    btn.onclick = () => { buzz(); calc.insertFraction(f.num, f.den); renderCalc(); closeFracSheet(); };
+    btn.onclick = () => { feedback(); calc.insertFraction(f.num, f.den); renderCalc(); closeFracSheet(); };
     grid.appendChild(btn);
   });
   $('fracSheet').classList.add('show');
@@ -212,13 +268,70 @@ $('fracClose').onclick = closeFracSheet;
 $('fracSheet').addEventListener('click', (e) => { if (e.target.id === 'fracSheet') closeFracSheet(); });
 
 /* ============================ tape ============================ */
-function persistTape() { try { localStorage.setItem('concalc.tape', JSON.stringify(calc.tape.slice(0, 200))); } catch (e) {} }
+function persistTape() { if (sharedView) return; try { localStorage.setItem('concalc.tape', JSON.stringify(calc.tape.slice(0, 200))); } catch (e) {} }
 function renderTape() {
   const list = $('tapeList');
   if (!calc.tape.length) { list.innerHTML = '<div class="results-empty">No calculations yet. Your running tape appears here after you press =.</div>'; return; }
   list.innerHTML = calc.tape.map((t) => `<div class="tape-item"><div class="tl">${t.line}</div><div class="tr">= ${t.result}</div></div>`).join('');
 }
 $('clearTape').onclick = () => { calc.clearTape(); persistTape(); renderTape(); };
+
+/* ============================ share / export ============================ */
+function tapeAsText() { return calc.tape.slice(0, 60).map((t) => `${t.line} = ${t.result}`).join('\n'); }
+function appUrl() { return location.origin + location.pathname; }
+function encodeStateHash() {
+  try {
+    const data = { t: calc.tape.slice(0, 60) };
+    return 't=' + btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  } catch (e) { return ''; }
+}
+async function shareTapeAction() {
+  const cur = calc.displayed();
+  const curLine = cur ? U.displayValue(cur, prefs).main : '';
+  const lines = tapeAsText();
+  if (!lines && !curLine) { toast('Nothing to share yet'); return; }
+  const hash = encodeStateHash();
+  const url = appUrl() + (hash ? '#' + hash : '');
+  const text = (lines || '= ' + curLine) + '\n\nOpen in 16OC: ' + url;
+  if (navigator.share) {
+    try { await navigator.share({ title: '16OC calculation', text }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text); toast('Copied — paste into a text'); }
+  catch (e) { toast('Sharing not supported here'); }
+}
+function exportPDF() {
+  if (!calc.tape.length) { toast('Nothing to export yet'); return; }
+  const rows = calc.tape.slice(0, 120).map((t) =>
+    `<tr><td>${escapeHtml(t.line)}</td><td class="r">${escapeHtml(t.result)}</td></tr>`).join('');
+  const date = new Date().toLocaleString();
+  $('printArea').innerHTML =
+    `<div class="p-head"><div class="sq">${svg('speedsquare')}</div><div class="p-title">16OC — Calculation Tape</div></div>` +
+    `<div class="p-meta"><span>Prepared by: <span class="line">&nbsp;</span></span><span>${escapeHtml(date)}</span></div>` +
+    `<table><thead><tr><th>Calculation</th><th class="r">Result</th></tr></thead><tbody>${rows}</tbody></table>` +
+    `<div class="p-foot">Generated with 16OC · 16oc.pages.dev</div>`;
+  window.print();
+}
+$('shareTape').onclick = shareTapeAction;
+$('pdfTape').onclick = exportPDF;
+
+/* Load a shared calculation from the URL hash (read-only view) */
+function loadSharedFromHash() {
+  const h = location.hash.slice(1);
+  if (!h.startsWith('t=')) return false;
+  try {
+    const data = JSON.parse(decodeURIComponent(escape(atob(h.slice(2)))));
+    if (data && Array.isArray(data.t)) { calc.tape = data.t; sharedView = true; return true; }
+  } catch (e) {}
+  return false;
+}
+$('sharedDismiss').onclick = () => {
+  sharedView = false;
+  $('sharedBanner').classList.remove('show');
+  try { history.replaceState(null, '', appUrl()); } catch (e) {}
+  try { const t = JSON.parse(localStorage.getItem('concalc.tape') || '[]'); calc.tape = Array.isArray(t) ? t : []; } catch (e) { calc.tape = []; }
+  renderTape();
+};
 
 /* ============================ tab navigation ============================ */
 document.querySelector('nav.tabs').addEventListener('click', (e) => {
@@ -644,6 +757,8 @@ $('prefTheme').value = prefs.theme;
 $('prefTheme').addEventListener('change', (e) => { prefs.theme = e.target.value; savePrefs(); applyTheme(); });
 $('prefHaptics').value = prefs.haptics;
 $('prefHaptics').addEventListener('change', (e) => { prefs.haptics = e.target.value; savePrefs(); });
+$('prefSound').value = prefs.sound;
+$('prefSound').addEventListener('change', (e) => { prefs.sound = e.target.value; savePrefs(); if (prefs.sound === 'on') clickSound(); });
 
 /* ============================ PWA ============================ */
 let deferredPrompt = null;
@@ -662,6 +777,13 @@ if ('serviceWorker' in navigator) {
 }
 
 /* ============================ init ============================ */
+if (loadSharedFromHash()) {
+  $('sharedBanner').classList.add('show');
+  // jump to the tape so the shared calculation is visible
+  document.querySelectorAll('nav.tabs button').forEach((x) => x.classList.toggle('active', x.dataset.tab === 'tape'));
+  document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
+  $('screen-tape').classList.add('active');
+}
 renderCalc();
 renderTape();
 

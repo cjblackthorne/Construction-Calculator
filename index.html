@@ -32,6 +32,11 @@
       <button class="x" id="installDismiss">✕</button>
     </div>
 
+    <div class="shared-banner" id="sharedBanner">
+      <span>Viewing a shared calculation.</span>
+      <button id="sharedDismiss">Use my own</button>
+    </div>
+
     <!-- ===== Calculator ===== -->
     <section class="screen active" id="screen-calc">
       <div class="calc-wrap">
@@ -93,7 +98,11 @@
     <section class="screen" id="screen-tape">
       <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
         <span>Paperless Tape</span>
-        <button id="clearTape" style="background:var(--panel-2);border:0;color:var(--accent);padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer">Clear</button>
+        <div class="tape-actions">
+          <button id="shareTape"><span data-icon="share"></span>Share</button>
+          <button id="pdfTape"><span data-icon="pdf"></span>PDF</button>
+          <button id="clearTape">Clear</button>
+        </div>
       </div>
       <div class="tape-list" id="tapeList"></div>
     </section>
@@ -128,6 +137,14 @@
             <option value="off">Off</option>
           </select>
           <div class="hint">A short buzz confirms each tap without looking (supported devices).</div>
+        </div>
+        <div class="field">
+          <label for="prefSound">Key click sound</label>
+          <select id="prefSound">
+            <option value="off" selected>Off</option>
+            <option value="on">On — mechanical click on press</option>
+          </select>
+          <div class="hint">An audible click that mimics a physical keypad.</div>
         </div>
         <h3>About</h3>
         <div class="about">
@@ -167,6 +184,9 @@
       <button class="close" id="fracClose">Close</button>
     </div>
   </div>
+
+  <div id="toast"></div>
+  <div id="printArea"></div>
 
   <script src="js/units.js"></script>
   <script src="js/calc.js"></script>
