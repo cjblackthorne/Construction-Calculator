@@ -57,14 +57,37 @@ function applyTheme() {
 }
 applyTheme();
 
-/* short haptic confirmation on key press.
- * Android/Chrome: Vibration API. iOS (no Vibration API): toggle a hidden
- * <input type="checkbox" switch> via a label click, which fires a light WebKit
- * haptic inside a user gesture — the only haptic path Apple allows in a PWA. */
+/* Haptic confirmation on key press.
+ * Android/Chrome: Vibration API. iOS (no Vibration API): iOS 17.4+/18 fires a
+ * native WebKit haptic when an <input type="checkbox" switch> is toggled by a
+ * label click inside a user gesture. The input must render as the real native
+ * switch (all:initial + appearance:auto) or no haptic fires — this mirrors the
+ * proven web-haptics approach. */
+let hapticLabel = null;
+function ensureHaptic() {
+  if (hapticLabel || typeof document === 'undefined') return;
+  const id = 'haptic-switch-16oc';
+  const label = document.createElement('label');
+  label.setAttribute('for', id);
+  label.textContent = 'Haptic feedback';
+  label.style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.setAttribute('switch', '');
+  input.id = id;
+  input.style.all = 'initial';
+  input.style.appearance = 'auto';
+  input.style.webkitAppearance = 'auto';
+  input.style.display = 'none';
+  label.appendChild(input);
+  document.body.appendChild(label);
+  hapticLabel = label;
+}
 function buzz() {
   if (prefs.haptics !== 'on') return;
-  if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} return; }
-  try { const l = document.getElementById('hapticLabel'); if (l) l.click(); } catch (e) {}
+  if (typeof navigator.vibrate === 'function') { try { navigator.vibrate(8); } catch (e) {} return; }
+  ensureHaptic();
+  try { if (hapticLabel) hapticLabel.click(); } catch (e) {}
 }
 
 /* synthesized mechanical key-click (optional) */
@@ -844,7 +867,7 @@ $('prefDenom').addEventListener('change', (e) => { prefs.denom = +e.target.value
 $('prefTheme').value = prefs.theme;
 $('prefTheme').addEventListener('change', (e) => { prefs.theme = e.target.value; savePrefs(); applyTheme(); });
 $('prefHaptics').value = prefs.haptics;
-$('prefHaptics').addEventListener('change', (e) => { prefs.haptics = e.target.value; savePrefs(); });
+$('prefHaptics').addEventListener('change', (e) => { prefs.haptics = e.target.value; savePrefs(); if (prefs.haptics === 'on') buzz(); });
 $('prefSound').value = prefs.sound;
 $('prefSound').addEventListener('change', (e) => { prefs.sound = e.target.value; savePrefs(); if (prefs.sound === 'on') clickSound(); });
 
