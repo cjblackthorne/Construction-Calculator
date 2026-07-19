@@ -26,12 +26,6 @@
       </div>
     </header>
 
-    <div class="install-banner" id="installBanner">
-      <span>Add 16OC to your home screen — full-screen &amp; offline.</span>
-      <button id="installBtn">Install</button>
-      <button class="x" id="installDismiss">✕</button>
-    </div>
-
     <div class="shared-banner" id="sharedBanner">
       <span>Viewing a shared calculation.</span>
       <button id="sharedDismiss">Use my own</button>
@@ -196,6 +190,19 @@
 
   <div id="toast"></div>
   <div id="printArea"></div>
+
+  <!-- Install gate: 16OC only runs as an installed app, not in a browser tab -->
+  <div id="installGate" class="install-gate" hidden>
+    <div class="gate-card">
+      <div class="gate-logo" data-icon="speedsquare"></div>
+      <h1>16OC</h1>
+      <div class="tag">16" On-Center · Construction Calculator</div>
+      <h2>Install to use 16OC</h2>
+      <p>16OC runs as an app on your home screen — full-screen and fully offline.
+         It isn't available in the browser tab. Add it to your home screen to start.</p>
+      <div id="gateInstall"></div>
+    </div>
+  </div>
 
   <script src="js/units.js"></script>
   <script src="js/qr.js"></script>

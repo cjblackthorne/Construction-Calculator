@@ -35,6 +35,9 @@ const ICN = {
   share: '<circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><line x1="8.1" y1="10.9" x2="15.9" y2="6.1"/><line x1="8.1" y1="13.1" x2="15.9" y2="17.9"/>',
   pdf: '<path d="M7 3 h7 l4 4 v13 a1 1 0 0 1 -1 1 h-9 a1 1 0 0 1 -1 -1 Z"/><path d="M14 3 v4 h4"/><line x1="9.5" y1="13" x2="14.5" y2="13"/><line x1="9.5" y1="16" x2="14.5" y2="16"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11 a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/>',
+  shareIos: '<path d="M12 3 L12 15"/><path d="M8.5 6.5 L12 3 L15.5 6.5"/><path d="M6.5 10 H5 a1 1 0 0 0 -1 1 v8 a1 1 0 0 0 1 1 h14 a1 1 0 0 0 1 -1 v-8 a1 1 0 0 0 -1 -1 h-1.5"/>',
+  menuDots: '<circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/>',
+  plusbox: '<rect x="4" y="4" width="16" height="16" rx="3"/><line x1="12" y1="8.5" x2="12" y2="15.5"/><line x1="8.5" y1="12" x2="15.5" y2="12"/>',
 };
 function svg(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">${ICN[name] || ''}</svg>`;
@@ -871,17 +874,66 @@ $('prefHaptics').addEventListener('change', (e) => { prefs.haptics = e.target.va
 $('prefSound').value = prefs.sound;
 $('prefSound').addEventListener('change', (e) => { prefs.sound = e.target.value; savePrefs(); if (prefs.sound === 'on') clickSound(); });
 
-/* ============================ PWA ============================ */
+/* ============================ PWA install gate ============================ */
+/* 16OC is usable only when launched as an installed app (standalone display
+ * mode). In a normal browser tab we show a full-screen gate with instructions. */
 let deferredPrompt = null;
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: fullscreen)').matches
+    || window.matchMedia('(display-mode: minimal-ui)').matches
+    || navigator.standalone === true;
+}
+function isIOSDevice() {
+  const ua = navigator.userAgent || '';
+  return /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function renderGateInstructions() {
+  const el = $('gateInstall');
+  if (isIOSDevice()) {
+    el.innerHTML =
+      `<div class="gate-steps">
+        <div class="gate-step"><span class="gs-ic">${svg('shareIos')}</span><span>In <b>Safari</b>, tap the <b>Share</b> button</span></div>
+        <div class="gate-step"><span class="gs-ic">${svg('plusbox')}</span><span>Choose <b>Add to Home Screen</b></span></div>
+        <div class="gate-step"><span class="gs-ic">${svg('speedsquare')}</span><span>Open <b>16OC</b> from your home screen</span></div>
+      </div>
+      <div class="gate-note">Must be opened in Safari — other iOS browsers can't add to the home screen.</div>`;
+  } else {
+    let html = '';
+    if (deferredPrompt) html += `<button class="btn-primary gate-btn" id="gateInstallBtn">Install 16OC</button>`;
+    html +=
+      `<div class="gate-steps">
+        <div class="gate-step"><span class="gs-ic">${svg('menuDots')}</span><span>Open your browser <b>menu</b></span></div>
+        <div class="gate-step"><span class="gs-ic">${svg('plusbox')}</span><span>Choose <b>Install app</b> or <b>Add to Home screen</b></span></div>
+        <div class="gate-step"><span class="gs-ic">${svg('speedsquare')}</span><span>Open <b>16OC</b> from your home screen</span></div>
+      </div>`;
+    el.innerHTML = html;
+    const btn = $('gateInstallBtn');
+    if (btn) btn.onclick = async () => { if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; } };
+  }
+}
+function updateGate() {
+  const gate = $('installGate');
+  if (isStandalone()) {
+    gate.hidden = true;
+    try { $('app').inert = false; } catch (e) {}
+  } else {
+    renderGateInstructions();
+    gate.hidden = false;
+    try { $('app').inert = true; } catch (e) {}   // block interaction with the app behind it
+  }
+}
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault(); deferredPrompt = e;
-  if (!localStorage.getItem('concalc.installDismissed')) $('installBanner').classList.add('show');
+  if (!isStandalone()) renderGateInstructions();   // add the Install button to the gate
 });
-$('installBtn').onclick = async () => {
-  $('installBanner').classList.remove('show');
-  if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
-};
-$('installDismiss').onclick = () => { $('installBanner').classList.remove('show'); localStorage.setItem('concalc.installDismissed', '1'); };
+window.addEventListener('appinstalled', () => { deferredPrompt = null; updateGate(); });
+const dmQuery = window.matchMedia('(display-mode: standalone)');
+(dmQuery.addEventListener ? dmQuery.addEventListener.bind(dmQuery, 'change') : dmQuery.addListener.bind(dmQuery))(updateGate);
+
+updateGate();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

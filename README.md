@@ -8,6 +8,10 @@ subscription. Named for **16" on-center**.
 
 Live at **[16oc.pages.dev](https://16oc.pages.dev)**.
 
+> **Install-only:** 16OC runs only as an installed app (standalone display mode).
+> Opened in a normal browser tab it shows an install gate instead of the
+> calculator, with per-platform instructions.
+
 ## Install on your phone
 
 1. Open the site in your phone's browser.
