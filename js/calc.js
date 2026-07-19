@@ -11,7 +11,8 @@ const U = window.Units;
 /* Parse a keypad-built entry string into a dimensioned Value.
  * Understands: feet ('), inches ("), fractions (a/b), yd, m, cm, mm and bare
  * scalars. Whitespace is irrelevant. */
-function parseEntry(str) {
+function parseEntry(str, defDenom) {
+  defDenom = defDenom || 16;                 // preset fraction accuracy (e.g. 16 => /16)
   if (str == null) return U.Scalar(0);
   str = String(str).trim();
   if (str === '') return U.Scalar(0);
@@ -35,11 +36,16 @@ function parseEntry(str) {
   let fracNum = 0;
 
   const flushInches = () => { while (nums.length) inches += nums.shift(); };
+  // Resolve a pending fraction whose denominator was never typed, using the
+  // preset accuracy — matches Construction Master (e.g. 3 / => 3/16").
+  const resolvePendingFrac = () => {
+    if (expectDenom) { inches += fracNum / defDenom; expectDenom = false; flushInches(); hasUnit = true; }
+  };
 
   for (const tk of toks) {
     if (tk.t === 'num') {
       if (expectDenom) {
-        const den = tk.v || 1;
+        const den = tk.v || defDenom;
         inches += fracNum / den;
         expectDenom = false;
         flushInches();           // any whole inches before the fraction
@@ -50,12 +56,13 @@ function parseEntry(str) {
       continue;
     }
     if (tk.t === 'sym') {
-      if (tk.v === "'") { inches += (nums.pop() || 0) * U.IN_PER_FT; nums = []; hasUnit = true; }
-      else if (tk.v === '"') { flushInches(); hasUnit = true; }
-      else if (tk.v === '/') { fracNum = nums.pop() || 0; expectDenom = true; }
+      if (tk.v === "'") { resolvePendingFrac(); inches += (nums.pop() || 0) * U.IN_PER_FT; nums = []; hasUnit = true; }
+      else if (tk.v === '"') { resolvePendingFrac(); flushInches(); hasUnit = true; }
+      else if (tk.v === '/') { resolvePendingFrac(); fracNum = nums.pop() || 0; expectDenom = true; }
       continue;
     }
     if (tk.t === 'unit') {
+      resolvePendingFrac();
       const n = nums.pop() || 0; nums = []; hasUnit = true;
       if (tk.v === 'yd') inches += n * U.IN_PER_YD;
       else if (tk.v === 'ft') inches += n * U.IN_PER_FT;
@@ -65,6 +72,9 @@ function parseEntry(str) {
       else if (tk.v === 'mm') inches += n * U.Convert.mmToIn(1);
     }
   }
+
+  // fraction with no denominator typed before the end
+  resolvePendingFrac();
 
   if (!hasUnit) {
     // pure scalar
@@ -155,7 +165,7 @@ class Calculator {
   allClear() { this.reset(); }
 
   _currentOperand() {
-    if (!this.entryEmpty()) return parseEntry(this.entryString());
+    if (!this.entryEmpty()) return parseEntry(this.entryString(), this.prefs.denom);
     if (this.acc) return this.acc;
     return U.Scalar(0);
   }
@@ -163,7 +173,7 @@ class Calculator {
   operator(op) {
     try {
       this.error = null;
-      const val = this.entryEmpty() ? this.acc : parseEntry(this.entryString());
+      const val = this.entryEmpty() ? this.acc : parseEntry(this.entryString(), this.prefs.denom);
       if (this.acc === null) {
         this.acc = val || U.Scalar(0);
       } else if (this.op && !this.entryEmpty()) {
@@ -183,13 +193,13 @@ class Calculator {
     try {
       this.error = null;
       if (this.op && this.acc !== null) {
-        const rhs = this.entryEmpty() ? this.acc : parseEntry(this.entryString());
+        const rhs = this.entryEmpty() ? this.acc : parseEntry(this.entryString(), this.prefs.denom);
         const before = this.acc, op = this.op;
         const result = U.combine(this.acc, this.op, rhs);
         this._pushTape(before, op, rhs, result);
         this.acc = result;
       } else if (!this.entryEmpty()) {
-        this.acc = parseEntry(this.entryString());
+        this.acc = parseEntry(this.entryString(), this.prefs.denom);
       }
       this.op = null;
       this.tokens = []; this.curNum = '';
@@ -200,7 +210,7 @@ class Calculator {
   /* The value currently shown (result or typed entry) */
   displayed() {
     if (this.error) return null;
-    if (!this.entryEmpty()) return parseEntry(this.entryString());
+    if (!this.entryEmpty()) return parseEntry(this.entryString(), this.prefs.denom);
     return this.acc;
   }
 
