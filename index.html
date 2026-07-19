@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#12151a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ConCalc" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Construction calculator — feet-inch-fraction math, rafters, stairs, area & volume, and more. Installable, works offline." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <title>ConCalc — Construction Calculator</title>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">C</div>
+      <div>
+        <h1>ConCalc</h1>
+        <div class="sub" id="subtitle">Construction Calculator</div>
+      </div>
+    </header>
+
+    <div class="install-banner" id="installBanner">
+      <span>Add ConCalc to your home screen for full-screen, offline use.</span>
+      <button id="installBtn">Install</button>
+      <button class="x" id="installDismiss">✕</button>
+    </div>
+
+    <!-- ===== Calculator ===== -->
+    <section class="screen active" id="screen-calc">
+      <div class="calc-wrap">
+        <div class="display">
+          <div class="badges" id="badges"></div>
+          <div class="entry" id="entry">&nbsp;</div>
+          <div class="result" id="result">0</div>
+          <div class="subres" id="subres">&nbsp;</div>
+        </div>
+
+        <div class="keys fn">
+          <button class="key fnk" data-act="ac">AC</button>
+          <button class="key fnk" data-act="back">⌫</button>
+          <button class="key fnk amber" data-act="mem">MEM</button>
+          <button class="key fnk amber" data-act="conv">CONV</button>
+        </div>
+
+        <div class="keys" id="keypad">
+          <button class="key unit" data-unit="yd">Yd</button>
+          <button class="key unit" data-unit="'">Feet</button>
+          <button class="key unit" data-unit="&quot;">Inch</button>
+          <button class="key unit" data-unit="/">/<small>frac</small></button>
+
+          <button class="key" data-d="7">7</button>
+          <button class="key" data-d="8">8</button>
+          <button class="key" data-d="9">9</button>
+          <button class="key op" data-op="/">÷</button>
+
+          <button class="key" data-d="4">4</button>
+          <button class="key" data-d="5">5</button>
+          <button class="key" data-d="6">6</button>
+          <button class="key op" data-op="*">×</button>
+
+          <button class="key" data-d="1">1</button>
+          <button class="key" data-d="2">2</button>
+          <button class="key" data-d="3">3</button>
+          <button class="key op" data-op="-">−</button>
+
+          <button class="key" data-d="0">0</button>
+          <button class="key" data-dot="1">.</button>
+          <button class="key unit" data-unit="m">m</button>
+          <button class="key op" data-op="+">+</button>
+
+          <button class="key unit" data-unit="cm">cm</button>
+          <button class="key unit" data-unit="mm">mm</button>
+          <button class="key" data-mplus="1">M+<small>mem</small></button>
+          <button class="key eq" data-eq="1">=</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Tools ===== -->
+    <section class="screen" id="screen-tools">
+      <div id="tools-home"></div>
+      <div id="tools-detail" style="display:none"></div>
+    </section>
+
+    <!-- ===== Tape ===== -->
+    <section class="screen" id="screen-tape">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Paperless Tape</span>
+        <button class="tosend" id="clearTape">Clear</button>
+      </div>
+      <div class="tape-list" id="tapeList"></div>
+    </section>
+
+    <!-- ===== Settings ===== -->
+    <section class="screen" id="screen-settings">
+      <div class="settings">
+        <h3>Preferences</h3>
+        <div class="field">
+          <label for="prefDenom">Fraction precision</label>
+          <select id="prefDenom">
+            <option value="2">1/2"</option>
+            <option value="4">1/4"</option>
+            <option value="8">1/8"</option>
+            <option value="16" selected>1/16"</option>
+            <option value="32">1/32"</option>
+            <option value="64">1/64"</option>
+          </select>
+        </div>
+        <h3>About</h3>
+        <div class="about">
+          <p><strong>ConCalc</strong> is a construction calculator that does real
+          feet-inch-fraction math, right-angle &amp; rafter solutions, stairs,
+          area &amp; volume, roofing, materials, trig and more.</p>
+          <p>It's a Progressive Web App: tap your browser's <em>Share → Add to Home
+          Screen</em> (iOS) or <em>Install app</em> (Android/Chrome) to get an icon
+          that launches full-screen and works offline.</p>
+          <p class="sub" id="verLine">v1.0</p>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button data-tab="calc" class="active"><span class="ic">🧮</span>Calc</button>
+      <button data-tab="tools"><span class="ic">📐</span>Tools</button>
+      <button data-tab="tape"><span class="ic">🧾</span>Tape</button>
+      <button data-tab="settings"><span class="ic">⚙️</span>Settings</button>
+    </nav>
+  </div>
+
+  <!-- Memory sheet -->
+  <div class="sheet-backdrop" id="memSheet">
+    <div class="sheet">
+      <h3>Memories</h3>
+      <div id="memSlots"></div>
+      <button class="close" id="memClose">Close</button>
+    </div>
+  </div>
+
+  <script src="js/units.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/solvers.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
