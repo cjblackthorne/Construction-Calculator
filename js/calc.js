@@ -11,8 +11,7 @@ const U = window.Units;
 /* Parse a keypad-built entry string into a dimensioned Value.
  * Understands: feet ('), inches ("), fractions (a/b), yd, m, cm, mm and bare
  * scalars. Whitespace is irrelevant. */
-function parseEntry(str, defDenom) {
-  defDenom = defDenom || 16;                 // preset fraction accuracy (e.g. 16 => /16)
+function parseEntry(str) {
   if (str == null) return U.Scalar(0);
   str = String(str).trim();
   if (str === '') return U.Scalar(0);
@@ -36,33 +35,25 @@ function parseEntry(str, defDenom) {
   let fracNum = 0;
 
   const flushInches = () => { while (nums.length) inches += nums.shift(); };
-  // Resolve a pending fraction whose denominator was never typed, using the
-  // preset accuracy — matches Construction Master (e.g. 3 / => 3/16").
-  const resolvePendingFrac = () => {
-    if (expectDenom) { inches += fracNum / defDenom; expectDenom = false; flushInches(); hasUnit = true; }
-  };
 
   for (const tk of toks) {
     if (tk.t === 'num') {
       if (expectDenom) {
-        const den = tk.v || defDenom;
-        inches += fracNum / den;
+        // denominator typed by the user; ignore incomplete (/0) fractions
+        if (tk.v) { inches += fracNum / tk.v; flushInches(); hasUnit = true; }
         expectDenom = false;
-        flushInches();           // any whole inches before the fraction
-        hasUnit = true;
       } else {
         nums.push(tk.v);
       }
       continue;
     }
     if (tk.t === 'sym') {
-      if (tk.v === "'") { resolvePendingFrac(); inches += (nums.pop() || 0) * U.IN_PER_FT; nums = []; hasUnit = true; }
-      else if (tk.v === '"') { resolvePendingFrac(); flushInches(); hasUnit = true; }
-      else if (tk.v === '/') { resolvePendingFrac(); fracNum = nums.pop() || 0; expectDenom = true; }
+      if (tk.v === "'") { inches += (nums.pop() || 0) * U.IN_PER_FT; nums = []; hasUnit = true; }
+      else if (tk.v === '"') { flushInches(); hasUnit = true; }
+      else if (tk.v === '/') { fracNum = nums.pop() || 0; expectDenom = true; }
       continue;
     }
     if (tk.t === 'unit') {
-      resolvePendingFrac();
       const n = nums.pop() || 0; nums = []; hasUnit = true;
       if (tk.v === 'yd') inches += n * U.IN_PER_YD;
       else if (tk.v === 'ft') inches += n * U.IN_PER_FT;
@@ -72,9 +63,6 @@ function parseEntry(str, defDenom) {
       else if (tk.v === 'mm') inches += n * U.Convert.mmToIn(1);
     }
   }
-
-  // fraction with no denominator typed before the end
-  resolvePendingFrac();
 
   if (!hasUnit) {
     // pure scalar

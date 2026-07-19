@@ -37,8 +37,23 @@ function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, 
 
 function round(n, p) { const f = Math.pow(10, p); return Math.round(n * f) / f; }
 
+/* Find the exact fraction for a value in [0,1) with denominator up to maxDen,
+ * or null if the value isn't a clean fraction (e.g. an irrational result). */
+function exactFraction(x, maxDen) {
+  if (x < 1e-9) return { num: 0, den: 1 };
+  for (let den = 1; den <= maxDen; den++) {
+    const n = x * den;
+    if (Math.abs(n - Math.round(n)) < 1e-6) {
+      const num = Math.round(n), g = gcd(num, den);
+      return { num: num / g, den: den / g };
+    }
+  }
+  return null;
+}
+
 /* Format an inch count as feet-inch-fraction, e.g. 5' 3-1/2"
- * denom = fraction precision (2,4,8,16,32,64). */
+ * denom = fraction precision (2,4,8,16,32,64). Clean fractions (e.g. 1/12) are
+ * shown exactly as typed; only messy/irrational values round to `denom`. */
 function formatFIF(inches, denom) {
   denom = denom || 16;
   const neg = inches < -1e-9;
@@ -48,10 +63,13 @@ function formatFIF(inches, denom) {
   let remIn = total - ft * 12;
   let whole = Math.floor(remIn + 1e-9);
   let frac = remIn - whole;
-  let num = Math.round(frac * denom);
-  let den = denom;
 
-  if (num >= den) { whole += 1; num = 0; }
+  let num, den;
+  const ex = exactFraction(frac, Math.max(denom, 64));
+  if (ex) { num = ex.num; den = ex.den; }               // clean fraction — exact
+  else { num = Math.round(frac * denom); den = denom; }  // messy — round to accuracy
+
+  if (num >= den) { whole += 1; num = 0; den = 1; }
   if (whole >= 12) { ft += Math.floor(whole / 12); whole = whole % 12; }
 
   // reduce
@@ -79,9 +97,10 @@ function formatInchFrac(inches, denom) {
   const neg = inches < -1e-9;
   let total = Math.abs(inches);
   let whole = Math.floor(total + 1e-9);
-  let num = Math.round((total - whole) * denom);
-  let den = denom;
-  if (num >= den) { whole += 1; num = 0; }
+  let num, den;
+  const ex = exactFraction(total - whole, Math.max(denom, 64));
+  if (ex) { num = ex.num; den = ex.den; } else { num = Math.round((total - whole) * denom); den = denom; }
+  if (num >= den) { whole += 1; num = 0; den = 1; }
   if (num > 0) { const g = gcd(num, den); num /= g; den /= g; }
   let s = num > 0 ? (whole > 0 ? whole + '-' : '') + num + '/' + den : String(whole);
   return (neg ? '-' : '') + s + '"';
