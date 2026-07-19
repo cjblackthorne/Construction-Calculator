@@ -1,5 +1,5 @@
 /* ============================================================================
- * app.js — UI wiring, tool screens, PWA install, service worker
+ * app.js provides UI wiring, tool screens, PWA install, and the service worker
  * ==========================================================================*/
 'use strict';
 
@@ -64,7 +64,7 @@ applyTheme();
  * Android/Chrome: Vibration API. iOS (no Vibration API): iOS 17.4+/18 fires a
  * native WebKit haptic when an <input type="checkbox" switch> is toggled by a
  * label click inside a user gesture. The input must render as the real native
- * switch (all:initial + appearance:auto) or no haptic fires — this mirrors the
+ * switch (all:initial + appearance:auto) or no haptic fires. This mirrors the
  * proven web-haptics approach. */
 let hapticLabel = null;
 function ensureHaptic() {
@@ -254,7 +254,7 @@ function openMemSheet() {
   const wrap = $('memSlots'); wrap.innerHTML = '';
   for (let i = 0; i < 4; i++) {
     const m = calc.memories[i];
-    const val = m ? U.displayValue(m, prefs).main : '—';
+    const val = m ? U.displayValue(m, prefs).main : '';
     const row = document.createElement('div');
     row.className = 'mem-slot';
     row.innerHTML = `<div class="mlabel">M${i + 1}</div><div class="mval">${val}</div>`;
@@ -317,7 +317,7 @@ async function shareTapeAction() {
     try { await navigator.share({ title: '16OC calculation', text }); return; }
     catch (e) { if (e && e.name === 'AbortError') return; }
   }
-  try { await navigator.clipboard.writeText(text); toast('Copied — paste into a text'); }
+  try { await navigator.clipboard.writeText(text); toast('Copied. Paste it into a text.'); }
   catch (e) { toast('Sharing not supported here'); }
 }
 function exportPDF() {
@@ -326,7 +326,7 @@ function exportPDF() {
     `<tr><td>${escapeHtml(t.line)}</td><td class="r">${escapeHtml(t.result)}</td></tr>`).join('');
   const date = new Date().toLocaleString();
   $('printArea').innerHTML =
-    `<div class="p-head"><div class="sq">${svg('speedsquare')}</div><div class="p-title">16OC — Calculation Tape</div></div>` +
+    `<div class="p-head"><div class="sq">${svg('speedsquare')}</div><div class="p-title">16OC Calculation Tape</div></div>` +
     `<div class="p-meta"><span>Prepared by: <span class="line">&nbsp;</span></span><span>${escapeHtml(date)}</span></div>` +
     `<table><thead><tr><th>Calculation</th><th class="r">Result</th></tr></thead><tbody>${rows}</tbody></table>` +
     `<div class="p-foot">Generated with 16OC · 16oc.pages.dev</div>`;
@@ -405,7 +405,7 @@ $('micBtn').onclick = () => {
   if (listening) { try { recog.stop(); } catch (e) {} return; }
   recog = new SR();
   recog.lang = 'en-US'; recog.interimResults = false; recog.maxAlternatives = 1;
-  listening = true; $('micBtn').classList.add('listening'); toast('Listening — say a calculation');
+  listening = true; $('micBtn').classList.add('listening'); toast('Listening, say a calculation');
   recog.onresult = (e) => {
     const transcript = e.results[0][0].transcript.trim();
     const actions = parseSpeech(transcript);
@@ -442,7 +442,7 @@ $('qrPrint').onclick = () => {
   $('printArea').innerHTML =
     `<div class="qr-decal">${qrSVG(APP_SHARE_URL, 'Q')}` +
     `<div class="dt">16OC</div>` +
-    `<div class="ds">Free construction calculator — scan to open</div>` +
+    `<div class="ds">Scan to open the free construction calculator</div>` +
     `<div class="du">${escapeHtml(APP_SHARE_URL.replace('https://', ''))}</div></div>`;
   window.print();
 };
@@ -480,7 +480,7 @@ const TOOLS = [
     ],
     compute(v) {
       const r = S.rightTriangle({ rise: v.rise, run: v.run, diag: v.diag, angle: v.angle });
-      if (!r) return [{ label: 'Enter any two values', value: '—' }];
+      if (!r) return [{ label: 'Enter any two values', value: '' }];
       return [
         { label: 'Rise', value: L(r.rise), big: true },
         { label: 'Run', value: L(r.run), big: true },
@@ -499,7 +499,7 @@ const TOOLS = [
       { id: 'oc', type: 'len', label: 'Jack spacing (on-center)', hint: 'e.g. 16"' },
     ],
     compute(v) {
-      if (!v.run || v.pitch == null) return [{ label: 'Enter run and pitch', value: '—' }];
+      if (!v.run || v.pitch == null) return [{ label: 'Enter run and pitch', value: '' }];
       const r = S.rafters(v.run, v.pitch);
       const rows = [
         { label: 'Common rafter', value: L(r.common), big: true },
@@ -528,7 +528,7 @@ const TOOLS = [
       { id: 'floor', type: 'len', label: 'Floor thickness', hint: 'optional' },
     ],
     compute(v) {
-      if (!v.rise) return [{ label: 'Enter total rise', value: '—' }];
+      if (!v.rise) return [{ label: 'Enter total rise', value: '' }];
       const r = S.stairs(v.rise, {
         targetRiser: v.target || 7, treadDepth: v.tread || 10,
         headroom: v.headroom, floorThickness: v.floor,
@@ -557,7 +557,7 @@ const TOOLS = [
       { id: 'extra', type: 'num', label: 'Extra (corners/openings)', hint: 'optional' },
     ],
     compute(v) {
-      if (!v.len) return [{ label: 'Enter wall length', value: '—' }];
+      if (!v.len) return [{ label: 'Enter wall length', value: '' }];
       const oc = v.oc || 16;
       const count = S.studs(v.len, oc, v.extra || 0);
       return [
@@ -574,7 +574,7 @@ const TOOLS = [
       { id: 'side', type: 'len', label: 'Side length' },
     ],
     compute(v) {
-      if (!v.n || v.n < 3 || !v.side) return [{ label: 'Enter sides (≥3) and side length', value: '—' }];
+      if (!v.n || v.n < 3 || !v.side) return [{ label: 'Enter sides (≥3) and side length', value: '' }];
       const r = S.polygon(v.n, v.side);
       return [
         { label: 'Miter cut (each end)', value: deg(r.miter), big: true },
@@ -615,7 +615,7 @@ const TOOLS = [
       { id: 'h', type: 'len', label: 'Height / Depth', hint: 'optional (for volume)' },
     ],
     compute(v) {
-      if (!v.l || !v.w) return [{ label: 'Enter length and width', value: '—' }];
+      if (!v.l || !v.w) return [{ label: 'Enter length and width', value: '' }];
       const rows = [{ label: 'Area', value: A(S.rectArea(v.l, v.w)), big: true }];
       if (v.h) {
         rows.push({ label: 'Volume', value: Vol(S.boxVolume(v.l, v.w, v.h)), big: true });
@@ -632,7 +632,7 @@ const TOOLS = [
       { id: 'arc', type: 'angle', label: 'Arc angle (°)', hint: 'optional' },
     ],
     compute(v) {
-      if (!v.d) return [{ label: 'Enter diameter', value: '—' }];
+      if (!v.d) return [{ label: 'Enter diameter', value: '' }];
       const rows = [
         { label: 'Circumference', value: L(S.circleCircumference(v.d)), big: true },
         { label: 'Area', value: A(S.circleArea(v.d)), big: true },
@@ -649,7 +649,7 @@ const TOOLS = [
       { id: 'h', type: 'len', label: 'Height' },
     ],
     compute(v) {
-      if (!v.d || !v.h) return [{ label: 'Enter diameter and height', value: '—' }];
+      if (!v.d || !v.h) return [{ label: 'Enter diameter and height', value: '' }];
       return [
         { label: 'Column volume', value: Vol(S.columnVolume(v.d, v.h)), big: true },
         { label: 'Column (yd³)', value: U.round(S.columnVolume(v.d, v.h) / (36 ** 3), 3) + ' yd³' },
@@ -663,11 +663,11 @@ const TOOLS = [
   {
     id: 'roof', ic: 'roof', name: 'Roofing', desc: 'Squares, bundles & sheathing from plan area + pitch.',
     fields: [
-      { id: 'area', type: 'num', label: 'Plan (footprint) area — ft²' },
+      { id: 'area', type: 'num', label: 'Plan (footprint) area in ft²' },
       { id: 'pitch', type: 'pitch', label: 'Pitch (rise per 12)' },
     ],
     compute(v) {
-      if (!v.area || v.pitch == null) return [{ label: 'Enter plan area and pitch', value: '—' }];
+      if (!v.area || v.pitch == null) return [{ label: 'Enter plan area and pitch', value: '' }];
       const r = S.roof(v.area, v.pitch);
       return [
         { label: 'Actual roof area', value: n2(r.actualArea) + ' ft²', big: true },
@@ -681,12 +681,12 @@ const TOOLS = [
   {
     id: 'sheets', ic: 'sheets', name: 'Drywall / Siding', desc: 'Sheet count for a surface area.',
     fields: [
-      { id: 'area', type: 'num', label: 'Surface area — ft²' },
+      { id: 'area', type: 'num', label: 'Surface area in ft²' },
       { id: 'size', type: 'select', label: 'Sheet size', opts: [['32', "4×8 (32 ft²)"], ['36', "4×9 (36 ft²)"], ['48', "4×12 (48 ft²)"]] },
       { id: 'waste', type: 'num', label: 'Waste %', hint: 'default 10' },
     ],
     compute(v) {
-      if (!v.area) return [{ label: 'Enter surface area', value: '—' }];
+      if (!v.area) return [{ label: 'Enter surface area', value: '' }];
       const per = v.size ? +v.size : 32;
       const dims = per === 32 ? [4, 8] : per === 36 ? [4, 9] : [4, 12];
       const r = S.sheets(v.area, dims[0], dims[1], v.waste == null ? 10 : v.waste);
@@ -700,10 +700,10 @@ const TOOLS = [
   {
     id: 'blocks', ic: 'blocks', name: 'Concrete Block', desc: 'Block count for a wall area.',
     fields: [
-      { id: 'area', type: 'num', label: 'Wall area — ft²' },
+      { id: 'area', type: 'num', label: 'Wall area in ft²' },
     ],
     compute(v) {
-      if (!v.area) return [{ label: 'Enter wall area', value: '—' }];
+      if (!v.area) return [{ label: 'Enter wall area', value: '' }];
       return [
         { label: 'Blocks (16×8)', value: n0(S.blocks(v.area)), big: true },
         { label: 'Per block face', value: '0.888 ft²' },
@@ -719,7 +719,7 @@ const TOOLS = [
       { id: 'qty', type: 'num', label: 'Quantity', hint: 'default 1' },
     ],
     compute(v) {
-      if (!v.t || !v.w || !v.len) return [{ label: 'Enter thickness, width, length', value: '—' }];
+      if (!v.t || !v.w || !v.len) return [{ label: 'Enter thickness, width, length', value: '' }];
       const bf = S.boardFeet(v.t, v.w, v.len, v.qty || 1);
       return [
         { label: 'Board feet', value: n2(bf), big: true },
@@ -734,7 +734,7 @@ const TOOLS = [
       { id: 'price', type: 'num', label: 'Unit price ($)' },
     ],
     compute(v) {
-      if (v.qty == null || v.price == null) return [{ label: 'Enter quantity and price', value: '—' }];
+      if (v.qty == null || v.price == null) return [{ label: 'Enter quantity and price', value: '' }];
       return [
         { label: 'Total cost', value: '$' + n2(S.cost(v.qty, v.price)), big: true },
         { label: 'Per unit', value: '$' + n2(v.price) },
@@ -746,8 +746,8 @@ const TOOLS = [
   {
     id: 'trig', ic: 'trig', name: 'Trigonometry', desc: 'Sine, cosine, tangent & their inverses.',
     fields: [
-      { id: 'angle', type: 'angle', label: 'Angle (°) — for sin/cos/tan' },
-      { id: 'ratio', type: 'num', label: 'Ratio — for arc functions', hint: 'optional' },
+      { id: 'angle', type: 'angle', label: 'Angle for sin/cos/tan (°)' },
+      { id: 'ratio', type: 'num', label: 'Ratio for arc functions', hint: 'optional' },
     ],
     compute(v) {
       const rows = [];
@@ -761,18 +761,18 @@ const TOOLS = [
         rows.push({ label: 'arccos', value: deg(S.acos(v.ratio)) });
       }
       if (v.ratio != null) rows.push({ label: 'arctan', value: deg(S.atan(v.ratio)) });
-      return rows.length ? rows : [{ label: 'Enter an angle or a ratio', value: '—' }];
+      return rows.length ? rows : [{ label: 'Enter an angle or a ratio', value: '' }];
     },
   },
   {
     id: 'weight', ic: 'weight', name: 'Weight per Volume', desc: 'Material weight from volume × density.',
     fields: [
-      { id: 'cuft', type: 'num', label: 'Volume — ft³' },
+      { id: 'cuft', type: 'num', label: 'Volume in ft³' },
       { id: 'density', type: 'select', label: 'Material', opts: [['150', 'Concrete (150 lb/ft³)'], ['165', 'Reinforced concrete (165)'], ['100', 'Gravel (100)'], ['62.4', 'Water (62.4)'], ['490', 'Steel (490)']] },
       { id: 'custom', type: 'num', label: 'Custom density (lb/ft³)', hint: 'optional, overrides above' },
     ],
     compute(v) {
-      if (v.cuft == null) return [{ label: 'Enter volume', value: '—' }];
+      if (v.cuft == null) return [{ label: 'Enter volume', value: '' }];
       const dens = v.custom != null ? v.custom : (v.density ? +v.density : 150);
       const lb = S.weight(v.cuft, dens);
       return [
@@ -857,7 +857,7 @@ function openTool(id) {
     let rows;
     try { rows = t.compute(vals); } catch (e) { rows = [{ label: 'Error', value: e.message }]; }
     const rEl = $('toolResults');
-    if (!rows || !rows.length) { rEl.innerHTML = '<div class="results-empty">—</div>'; return; }
+    if (!rows || !rows.length) { rEl.innerHTML = '<div class="results-empty"></div>'; return; }
     rEl.innerHTML = rows.map((r) => `<div class="row ${r.big ? 'big' : ''}"><span class="rl">${r.label}</span><span class="rv">${r.value}</span></div>`).join('');
   };
   det.querySelectorAll('input, select').forEach((el) => { el.addEventListener('input', recompute); el.addEventListener('change', recompute); });
@@ -898,7 +898,7 @@ function renderGateInstructions() {
         <div class="gate-step"><span class="gs-ic">${svg('plusbox')}</span><span>Choose <b>Add to Home Screen</b></span></div>
         <div class="gate-step"><span class="gs-ic">${svg('speedsquare')}</span><span>Open <b>16OC</b> from your home screen</span></div>
       </div>
-      <div class="gate-note">Must be opened in Safari — other iOS browsers can't add to the home screen.</div>`;
+      <div class="gate-note">Must be opened in Safari. Other iOS browsers can't add to the home screen.</div>`;
   } else {
     let html = '';
     if (deferredPrompt) html += `<button class="btn-primary gate-btn" id="gateInstallBtn">Install 16OC</button>`;

@@ -1,5 +1,5 @@
 /* ============================================================================
- * solvers.js — Construction math functions
+ * solvers.js holds the construction math functions
  * Lengths are in INCHES, angles in DEGREES unless noted. Pure functions.
  * ==========================================================================*/
 'use strict';
@@ -51,7 +51,7 @@ const Solvers = {
     const hipPitch = (rise / hipRun) * 12;           // hip rise per 12 of hip run
     const hipPlumb = deg(Math.atan2(rise, hipRun));
     const hipLevel = 90 - hipPlumb;
-    // Hip cheek (side) cut — the 45° in plan projected
+    // Hip cheek (side) cut, the 45° in plan projected
     const hipCheek = deg(Math.atan(Math.cos(rad(hipPlumb)) )) ; // placeholder refined below
     const cheek = deg(Math.atan2(run, hipRun));      // ~45 for regular
     const hipBevel = deg(Math.atan(Math.cos(rad(plumb))));      // saw bevel for hip cheek

@@ -1,4 +1,4 @@
-/* 16OC service worker — offline-first cache (iOS redirect-safe) */
+/* 16OC service worker, offline-first cache, iOS redirect-safe */
 const CACHE = 'concalc-v4';
 const ASSETS = [
   './index.html',

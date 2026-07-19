@@ -1,5 +1,5 @@
 /* ============================================================================
- * units.js — Dimensional math engine
+ * units.js is the dimensional math engine
  *
  * Everything is stored internally in a single base unit per dimension:
  *   length  -> inches
@@ -66,8 +66,8 @@ function formatFIF(inches, denom) {
 
   let num, den;
   const ex = exactFraction(frac, Math.max(denom, 64));
-  if (ex) { num = ex.num; den = ex.den; }               // clean fraction — exact
-  else { num = Math.round(frac * denom); den = denom; }  // messy — round to accuracy
+  if (ex) { num = ex.num; den = ex.den; }               // clean fraction, shown exactly
+  else { num = Math.round(frac * denom); den = denom; }  // messy value, round to accuracy
 
   if (num >= den) { whole += 1; num = 0; den = 1; }
   if (whole >= 12) { ft += Math.floor(whole / 12); whole = whole % 12; }

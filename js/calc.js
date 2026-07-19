@@ -1,5 +1,5 @@
 /* ============================================================================
- * calc.js — Feet-Inch-Fraction calculator engine (entry parsing + FSM)
+ * calc.js is the Feet-Inch-Fraction calculator engine (entry parsing and FSM)
  * Depends on units.js (window.Units)
  * ==========================================================================*/
 'use strict';

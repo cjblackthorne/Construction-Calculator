@@ -1,5 +1,5 @@
 /* ============================================================================
- * qr.js — self-contained QR Code generator (byte mode), no dependencies.
+ * qr.js is a self-contained QR Code generator (byte mode) with no dependencies.
  * Tables per ISO/IEC 18004. window.QR.generate(text, ecLevel) -> {size, modules}
  * ==========================================================================*/
 'use strict';
