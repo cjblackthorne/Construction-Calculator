@@ -3,30 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#12151a" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ConCalc" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="16OC" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="description" content="Construction calculator — feet-inch-fraction math, rafters, stairs, area & volume, and more. Installable, works offline." />
+  <meta name="description" content="16OC — construction calculator. Feet-inch-fraction math, rafters, stairs, area & volume, and more. Installable, works offline." />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192" />
   <link rel="stylesheet" href="css/styles.css" />
-  <title>ConCalc — Construction Calculator</title>
+  <title>16OC — Construction Calculator</title>
 </head>
 <body>
   <div id="app">
     <header>
-      <div class="logo">C</div>
+      <div class="logo" data-icon="speedsquare"></div>
       <div>
-        <h1>ConCalc</h1>
-        <div class="sub" id="subtitle">Construction Calculator</div>
+        <h1>16OC</h1>
+        <div class="sub">16" On-Center · Construction Calculator</div>
       </div>
     </header>
 
     <div class="install-banner" id="installBanner">
-      <span>Add ConCalc to your home screen for full-screen, offline use.</span>
+      <span>Add 16OC to your home screen — full-screen &amp; offline.</span>
       <button id="installBtn">Install</button>
       <button class="x" id="installDismiss">✕</button>
     </div>
@@ -52,7 +53,7 @@
           <button class="key unit" data-unit="yd">Yd</button>
           <button class="key unit" data-unit="'">Feet</button>
           <button class="key unit" data-unit="&quot;">Inch</button>
-          <button class="key unit" data-unit="/">/<small>frac</small></button>
+          <button class="key unit" data-act="frac">Frac</button>
 
           <button class="key" data-d="7">7</button>
           <button class="key" data-d="8">8</button>
@@ -92,7 +93,7 @@
     <section class="screen" id="screen-tape">
       <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
         <span>Paperless Tape</span>
-        <button class="tosend" id="clearTape">Clear</button>
+        <button id="clearTape" style="background:var(--panel-2);border:0;color:var(--accent);padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer">Clear</button>
       </div>
       <div class="tape-list" id="tapeList"></div>
     </section>
@@ -101,6 +102,14 @@
     <section class="screen" id="screen-settings">
       <div class="settings">
         <h3>Preferences</h3>
+        <div class="field">
+          <label for="prefTheme">Display mode</label>
+          <select id="prefTheme">
+            <option value="light" selected>Light (default)</option>
+            <option value="hc">Sunlight — high contrast</option>
+          </select>
+          <div class="hint">Sunlight mode is bright yellow on black for direct outdoor light.</div>
+        </div>
         <div class="field">
           <label for="prefDenom">Fraction precision</label>
           <select id="prefDenom">
@@ -112,24 +121,32 @@
             <option value="64">1/64"</option>
           </select>
         </div>
+        <div class="field">
+          <label for="prefHaptics">Haptic feedback</label>
+          <select id="prefHaptics">
+            <option value="on" selected>On — vibrate on key press</option>
+            <option value="off">Off</option>
+          </select>
+          <div class="hint">A short buzz confirms each tap without looking (supported devices).</div>
+        </div>
         <h3>About</h3>
         <div class="about">
-          <p><strong>ConCalc</strong> is a construction calculator that does real
-          feet-inch-fraction math, right-angle &amp; rafter solutions, stairs,
-          area &amp; volume, roofing, materials, trig and more.</p>
-          <p>It's a Progressive Web App: tap your browser's <em>Share → Add to Home
-          Screen</em> (iOS) or <em>Install app</em> (Android/Chrome) to get an icon
-          that launches full-screen and works offline.</p>
-          <p class="sub" id="verLine">v1.0</p>
+          <p><strong>16OC</strong> does real feet-inch-fraction math plus right-angle
+          &amp; rafter solutions, stairs, area &amp; volume, roofing, materials and trig.</p>
+          <p>It's a free Progressive Web App — no signup, no ads, no subscription. Tap
+          your browser's <em>Share → Add to Home Screen</em> (iOS) or <em>Install app</em>
+          (Android) to get an icon that launches full-screen and works offline.</p>
+          <p>The screen stays awake while the app is open, so it won't sleep between measurements.</p>
+          <p id="verLine">v1.1 · 16oc.pages.dev</p>
         </div>
       </div>
     </section>
 
     <nav class="tabs">
-      <button data-tab="calc" class="active"><span class="ic">🧮</span>Calc</button>
-      <button data-tab="tools"><span class="ic">📐</span>Tools</button>
-      <button data-tab="tape"><span class="ic">🧾</span>Tape</button>
-      <button data-tab="settings"><span class="ic">⚙️</span>Settings</button>
+      <button data-tab="calc" class="active"><span class="ic" data-icon="calc"></span>Calc</button>
+      <button data-tab="tools"><span class="ic" data-icon="tools"></span>Tools</button>
+      <button data-tab="tape"><span class="ic" data-icon="tape"></span>Tape</button>
+      <button data-tab="settings"><span class="ic" data-icon="settings"></span>Settings</button>
     </nav>
   </div>
 
@@ -139,6 +156,15 @@
       <h3>Memories</h3>
       <div id="memSlots"></div>
       <button class="close" id="memClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Fraction sheet -->
+  <div class="sheet-backdrop" id="fracSheet">
+    <div class="sheet">
+      <h3>Insert fraction of an inch</h3>
+      <div class="frac-grid" id="fracGrid"></div>
+      <button class="close" id="fracClose">Close</button>
     </div>
   </div>
 

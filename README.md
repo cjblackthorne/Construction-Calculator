@@ -1,30 +1,40 @@
-# ConCalc — Construction Calculator (PWA)
+# 16OC — Construction Calculator (PWA)
 
-A web-based construction calculator inspired by Construction Master Pro. It does
-real **feet-inch-fraction** math and includes a full set of framing, area/volume,
-material, and trig solvers. It's a **Progressive Web App**, so you can add it to
-your phone's home screen and use it full-screen and **offline** — no app store.
+A free, web-based construction calculator inspired by Construction Master Pro. It
+does real **feet-inch-fraction** math plus a full set of framing, area/volume,
+material, and trig solvers. It's a **Progressive Web App** — add it to your phone's
+home screen and it runs full-screen and **offline**, with no signup, no ads, and no
+subscription. Named for **16" on-center**.
+
+Live at **[16oc.pages.dev](https://16oc.pages.dev)**.
 
 ## Install on your phone
 
 1. Open the site in your phone's browser.
 2. **iPhone (Safari):** tap **Share → Add to Home Screen**.
    **Android (Chrome):** tap **⋮ → Install app** (or use the in-app Install banner).
-3. Launch it from the new icon — it runs full-screen and works with no signal.
+3. Launch it from the new icon — full-screen, works with no signal.
 
-### Hosting it (GitHub Pages)
-This is a static site — no build step. In the repo settings enable
-**Pages → Deploy from branch → `main` / root**. Your app will be live at
-`https://<user>.github.io/<repo>/`.
+## Built for the jobsite
+
+- **Light, high-contrast UI** so it stays readable in daylight; optional **Sunlight
+  mode** (bright yellow on black) for direct sun.
+- **Large touch targets** and **haptic feedback** — a short buzz confirms each key
+  so you can work by feel, even with gloves.
+- **Screen stays awake** while the app is open (Wake Lock), so it won't sleep
+  between measurements.
+- **Fully offline** via a service worker — loads instantly in a basement or on a
+  remote lot.
 
 ## Features
 
 **Dimensional math & conversions**
 - Feet-Inch-Fraction, Inch-Fraction, Yards
 - Decimal Feet / Decimal Inches, selectable preset fractions (1/2" – 1/64")
-- Full metric (m, cm, mm) and Degree / D:M:S display
+- **Preset inch-fraction picker** (the `Frac` key) plus full metric (m, cm, mm)
+- Degree / D:M:S display, `CONV` to cycle result units
 - Dimensioned arithmetic: length × length → area, area × length → volume, etc.
-- Paperless tape, 4 memories, backspace, `CONV` to cycle result units
+- Paperless tape, 4 memories, backspace
 
 **Framing & layout**
 - Right-angle solver (rise / run / diagonal / pitch — enter any two)
@@ -32,34 +42,39 @@ This is a static site — no build step. In the repo settings enable
 - Stairs: risers, treads, stringer, angle, stairwell opening & headroom
 - Studs on-center, equal-sided polygon, compound miter / crown
 
-**Area & volume**
-- Rectangle area & box volume, circle, column / cone
+**Area & volume** — rectangle area & box volume, circle, column / cone
 
-**Materials**
-- Roofing (squares, bundles, sheathing), drywall / siding sheets
-- Concrete block, board feet, cost per unit, weight per volume
+**Materials** — roofing (squares, bundles, sheathing), drywall / siding sheets,
+concrete block, board feet, cost per unit, weight per volume
 
-**Special**
-- Trigonometry (sin/cos/tan + inverses)
+**Special** — trigonometry (sin/cos/tan + inverses)
 
-## How to enter dimensions
+## Entering dimensions
 
-On the keypad, type a number then tap a unit key. Example — **5 ft 3-1/2 in**:
-`5` `Feet` `3` `Inch` `1` `/` `2`. In the tool input fields you can also type
-naturally, e.g. `12' 6"`, `12.5 ft`, `150 in`, or `2 m`.
+- **Calculator:** type a number, then tap a unit key. For **5 ft 3-3/8 in**:
+  `5` `Feet` `3` `Inch` `Frac → 3/8`.
+- **Tool screens:** each length has **separate feet / inch / fraction inputs** — no
+  parsing, just fill in the boxes.
+
+## Deploying (Cloudflare Pages)
+
+This is a static site — no build step. In Cloudflare Pages, connect the repo and
+set **Build command:** *(none)* and **Output directory:** `/` (root). Every push to
+`main` deploys to `16oc.pages.dev`. (Any static host works — GitHub Pages, Netlify,
+etc.)
 
 ## Project layout
 
 ```
 index.html        app shell + calculator UI
-css/styles.css    styles (dark, mobile-first)
+css/styles.css    light / sunlight theme, mobile-first
 js/units.js       dimensional-math engine (base unit = inches)
 js/calc.js        entry parser + calculator state machine
 js/solvers.js     rafter/stair/area/roofing/trig math
-js/app.js         UI wiring, tool screens, PWA glue
+js/app.js         UI wiring, SVG icons, tool screens, PWA glue
 manifest.json     PWA manifest
 sw.js             service worker (offline cache)
-icons/            app icons
+icons/            speed-square app icons + SVG favicon
 ```
 
-No dependencies, no build. Open `index.html` (via any static server) and it runs.
+No dependencies, no build. Serve the folder with any static server and it runs.

@@ -1,5 +1,5 @@
-/* ConCalc service worker — offline-first cache */
-const CACHE = 'concalc-v1';
+/* 16OC service worker — offline-first cache */
+const CACHE = 'concalc-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './js/solvers.js',
   './js/app.js',
   './manifest.json',
+  './icons/favicon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

@@ -136,6 +136,13 @@ class Calculator {
     this.tokens.push(sym);
   }
 
+  /* Insert a preset inch fraction, e.g. 3/8 */
+  insertFraction(num, den) {
+    this._clearFreshIfNeeded();
+    this._flushNum();
+    this.tokens.push(String(num), '/', String(den));
+  }
+
   backspace() {
     this.error = null;
     if (this.freshResult) { return; }

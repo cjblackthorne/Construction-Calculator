@@ -9,14 +9,61 @@ const U = window.Units;
 const S = window.Solvers;
 const $ = (id) => document.getElementById(id);
 
+/* ============================ monochrome SVG icons ============================ */
+const ICN = {
+  speedsquare: '<path d="M5 4 L5 19 L20 19 Z"/><path d="M3.3 4.4 L3.3 19"/><path d="M3.3 4.4 L5 4.4"/><circle cx="4.15" cy="6.6" r=".7" fill="currentColor"/><line x1="8" y1="19" x2="8" y2="16.6"/><line x1="11.3" y1="19" x2="11.3" y2="16.6"/><line x1="14.6" y1="19" x2="14.6" y2="16.6"/>',
+  calc: '<rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="3.5" rx="1"/><circle cx="9" cy="13" r=".85" fill="currentColor"/><circle cx="12" cy="13" r=".85" fill="currentColor"/><circle cx="15" cy="13" r=".85" fill="currentColor"/><circle cx="9" cy="17" r=".85" fill="currentColor"/><circle cx="12" cy="17" r=".85" fill="currentColor"/><circle cx="15" cy="17" r=".85" fill="currentColor"/>',
+  tools: '<path d="M4 20 L20 20 L4 6 Z"/><line x1="4" y1="12" x2="7.5" y2="12"/><line x1="4" y1="16" x2="6" y2="16"/>',
+  tape: '<path d="M6 3 h12 v17 l-2 -1.3 -2 1.3 -2 -1.3 -2 1.3 -2 -1.3 -2 1.3 Z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/>',
+  settings: '<line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.1" fill="currentColor"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2.1" fill="currentColor"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="8" cy="17" r="2.1" fill="currentColor"/>',
+  rightangle: '<path d="M5 4 L5 19 L20 19 Z"/><path d="M3.3 4.4 L3.3 19"/><circle cx="4.15" cy="6.6" r=".7" fill="currentColor"/><line x1="8" y1="19" x2="8" y2="16.6"/><line x1="11.3" y1="19" x2="11.3" y2="16.6"/><line x1="14.6" y1="19" x2="14.6" y2="16.6"/>',
+  rafter: '<path d="M3 14 L12 6 L21 14"/><line x1="7.5" y1="10" x2="12" y2="14"/><line x1="16.5" y1="10" x2="12" y2="14"/>',
+  stairs: '<path d="M3 20 h4 v-4 h4 v-4 h4 v-4 h4"/>',
+  studs: '<line x1="5" y1="5" x2="19" y2="5"/><line x1="5" y1="19" x2="19" y2="19"/><line x1="7.5" y1="5" x2="7.5" y2="19"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="16.5" y1="5" x2="16.5" y2="19"/>',
+  polygon: '<polygon points="12,4 19,8 19,16 12,20 5,16 5,8"/>',
+  miter: '<path d="M4 20 L20 20 L20 4"/><line x1="4" y1="20" x2="20" y2="4"/>',
+  rect: '<rect x="4" y="7" width="16" height="11" rx="1"/><line x1="4" y1="18" x2="20" y2="7"/>',
+  circle: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><line x1="12" y1="12" x2="20" y2="12"/>',
+  column: '<ellipse cx="12" cy="6" rx="6" ry="2.4"/><path d="M6 6 V18"/><path d="M18 6 V18"/><path d="M6 18 a6 2.4 0 0 0 12 0"/>',
+  roof: '<path d="M4 11 L12 4 L20 11"/><path d="M6 10 V20 H18 V10"/><rect x="10.5" y="14" width="3" height="6"/>',
+  sheets: '<rect x="4" y="6" width="12" height="12" rx="1"/><rect x="8" y="9.5" width="12" height="12" rx="1"/>',
+  blocks: '<rect x="4" y="6" width="16" height="12" rx="1"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="8" y1="12" x2="8" y2="18"/><line x1="16" y1="12" x2="16" y2="18"/>',
+  boardfeet: '<rect x="3" y="9" width="18" height="6" rx="1"/><line x1="7.5" y1="9" x2="7.5" y2="15"/><line x1="13.5" y1="9" x2="13.5" y2="15"/>',
+  cost: '<path d="M4 4 H12 L20 12 L12 20 L4 12 Z"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/>',
+  trig: '<line x1="4" y1="12" x2="20" y2="12"/><line x1="5" y1="5" x2="5" y2="19"/><path d="M5 12 Q8 4 11 12 T17 12"/>',
+  weight: '<path d="M6 9 h12 l1.4 10 h-14.8 Z"/><path d="M9 9 a3 3 0 0 1 6 0"/>',
+};
+function svg(name) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">${ICN[name] || ''}</svg>`;
+}
+document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = svg(el.dataset.icon); });
+
 /* ---- preferences ---- */
 const prefs = loadPrefs();
 function loadPrefs() {
-  let p = { denom: 16, lengthFmt: 0 };
+  let p = { denom: 16, lengthFmt: 0, theme: 'light', haptics: 'on' };
   try { Object.assign(p, JSON.parse(localStorage.getItem('concalc.prefs') || '{}')); } catch (e) {}
   return p;
 }
 function savePrefs() { try { localStorage.setItem('concalc.prefs', JSON.stringify(prefs)); } catch (e) {} }
+
+function applyTheme() {
+  document.body.classList.toggle('hc', prefs.theme === 'hc');
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', prefs.theme === 'hc' ? '#000000' : '#ffffff');
+}
+applyTheme();
+
+/* short haptic confirmation on key press */
+function buzz() { if (prefs.haptics === 'on' && navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} } }
+
+/* keep the screen awake while the app is open (jobsite convenience) */
+let wakeLock = null;
+async function requestWake() {
+  try { if ('wakeLock' in navigator && document.visibilityState === 'visible') wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') requestWake(); });
+requestWake();
 
 const calc = new Calculator(prefs);
 try {
@@ -72,6 +119,8 @@ function renderCalc() {
 /* keypad handling */
 $('keypad').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
+  buzz();
+  if (b.dataset.act === 'frac') { openFracSheet(); return; }
   if (b.dataset.d !== undefined) calc.inputDigit(b.dataset.d);
   else if (b.dataset.dot !== undefined) calc.inputDot();
   else if (b.dataset.unit !== undefined) calc.unit(b.dataset.unit);
@@ -83,6 +132,7 @@ $('keypad').addEventListener('click', (e) => {
 
 document.querySelector('.keys.fn').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
+  buzz();
   const act = b.dataset.act;
   if (act === 'ac') calc.allClear();
   else if (act === 'back') calc.backspace();
@@ -137,6 +187,30 @@ function closeMemSheet() { $('memSheet').classList.remove('show'); }
 $('memClose').onclick = closeMemSheet;
 $('memSheet').addEventListener('click', (e) => { if (e.target.id === 'memSheet') closeMemSheet(); });
 
+/* ============================ preset fractions ============================ */
+/* reduced fractions k/denom for the current precision */
+function fractionList(denom) {
+  const out = [];
+  for (let k = 1; k < denom; k++) {
+    const g = U.gcd(k, denom);
+    out.push({ num: k / g, den: denom / g, dec: k / denom });
+  }
+  return out;
+}
+function openFracSheet() {
+  const grid = $('fracGrid'); grid.innerHTML = '';
+  fractionList(prefs.denom).forEach((f) => {
+    const btn = document.createElement('button');
+    btn.textContent = f.num + '/' + f.den;
+    btn.onclick = () => { buzz(); calc.insertFraction(f.num, f.den); renderCalc(); closeFracSheet(); };
+    grid.appendChild(btn);
+  });
+  $('fracSheet').classList.add('show');
+}
+function closeFracSheet() { $('fracSheet').classList.remove('show'); }
+$('fracClose').onclick = closeFracSheet;
+$('fracSheet').addEventListener('click', (e) => { if (e.target.id === 'fracSheet') closeFracSheet(); });
+
 /* ============================ tape ============================ */
 function persistTape() { try { localStorage.setItem('concalc.tape', JSON.stringify(calc.tape.slice(0, 200))); } catch (e) {} }
 function renderTape() {
@@ -170,7 +244,7 @@ function n2(x) { return String(U.round(x, 2)); }
 const TOOLS = [
   { group: 'Framing & Layout' },
   {
-    id: 'rightangle', ic: '📐', name: 'Right Angle', desc: 'Solve rise, run, diagonal & pitch from any two.',
+    id: 'rightangle', ic: 'rightangle', name: 'Right Angle', desc: 'Solve rise, run, diagonal & pitch from any two.',
     fields: [
       { id: 'rise', type: 'len', label: 'Rise', hint: 'leave blank to solve' },
       { id: 'run', type: 'len', label: 'Run', hint: 'leave blank to solve' },
@@ -191,7 +265,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'rafter', ic: '🏠', name: 'Rafters', desc: 'Common, hip/valley & jack rafters, cut angles.',
+    id: 'rafter', ic: 'rafter', name: 'Rafters', desc: 'Common, hip/valley & jack rafters, cut angles.',
     fields: [
       { id: 'run', type: 'len', label: 'Run (half-span to ridge)' },
       { id: 'pitch', type: 'pitch', label: 'Pitch (rise per 12)', hint: 'e.g. 6 for 6/12' },
@@ -218,7 +292,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'stairs', ic: '🪜', name: 'Stairs', desc: 'Risers, treads, stringer, angle & stairwell opening.',
+    id: 'stairs', ic: 'stairs', name: 'Stairs', desc: 'Risers, treads, stringer, angle & stairwell opening.',
     fields: [
       { id: 'rise', type: 'len', label: 'Total rise (floor to floor)' },
       { id: 'target', type: 'len', label: 'Target riser height', hint: 'default 7"' },
@@ -249,7 +323,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'studs', ic: '🧱', name: 'Studs On-Center', desc: 'Number of studs for a wall length & spacing.',
+    id: 'studs', ic: 'studs', name: 'Studs On-Center', desc: 'Number of studs for a wall length & spacing.',
     fields: [
       { id: 'len', type: 'len', label: 'Wall length' },
       { id: 'oc', type: 'len', label: 'On-center spacing', hint: 'default 16"' },
@@ -267,7 +341,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'polygon', ic: '⬡', name: 'Polygon', desc: 'Equal-sided polygon angles, area & miter cut.',
+    id: 'polygon', ic: 'polygon', name: 'Polygon', desc: 'Equal-sided polygon angles, area & miter cut.',
     fields: [
       { id: 'n', type: 'num', label: 'Number of sides' },
       { id: 'side', type: 'len', label: 'Side length' },
@@ -287,7 +361,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'miter', ic: '🔺', name: 'Compound Miter / Crown', desc: 'Miter & bevel for crown / sloped work.',
+    id: 'miter', ic: 'miter', name: 'Compound Miter / Crown', desc: 'Miter & bevel for crown / sloped work.',
     fields: [
       { id: 'spring', type: 'angle', label: 'Spring angle (°)', hint: 'e.g. 52 for 52/38 crown; 0 = flat baseboard' },
       { id: 'corner', type: 'angle', label: 'Corner angle (°)', hint: 'wall corner, default 90' },
@@ -307,7 +381,7 @@ const TOOLS = [
 
   { group: 'Area & Volume' },
   {
-    id: 'rect', ic: '⬛', name: 'Area & Volume', desc: 'Rectangle area & box volume from L × W × H.',
+    id: 'rect', ic: 'rect', name: 'Area & Volume', desc: 'Rectangle area & box volume from L × W × H.',
     fields: [
       { id: 'l', type: 'len', label: 'Length' },
       { id: 'w', type: 'len', label: 'Width' },
@@ -325,7 +399,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'circle', ic: '⭕', name: 'Circle', desc: 'Circumference, area & arc length.',
+    id: 'circle', ic: 'circle', name: 'Circle', desc: 'Circumference, area & arc length.',
     fields: [
       { id: 'd', type: 'len', label: 'Diameter' },
       { id: 'arc', type: 'angle', label: 'Arc angle (°)', hint: 'optional' },
@@ -342,7 +416,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'column', ic: '🥫', name: 'Column / Cone', desc: 'Volume & surface area of columns and cones.',
+    id: 'column', ic: 'column', name: 'Column / Cone', desc: 'Volume & surface area of columns and cones.',
     fields: [
       { id: 'd', type: 'len', label: 'Diameter' },
       { id: 'h', type: 'len', label: 'Height' },
@@ -360,7 +434,7 @@ const TOOLS = [
 
   { group: 'Materials' },
   {
-    id: 'roof', ic: '🏚️', name: 'Roofing', desc: 'Squares, bundles & sheathing from plan area + pitch.',
+    id: 'roof', ic: 'roof', name: 'Roofing', desc: 'Squares, bundles & sheathing from plan area + pitch.',
     fields: [
       { id: 'area', type: 'num', label: 'Plan (footprint) area — ft²' },
       { id: 'pitch', type: 'pitch', label: 'Pitch (rise per 12)' },
@@ -378,7 +452,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'sheets', ic: '🪟', name: 'Drywall / Siding', desc: 'Sheet count for a surface area.',
+    id: 'sheets', ic: 'sheets', name: 'Drywall / Siding', desc: 'Sheet count for a surface area.',
     fields: [
       { id: 'area', type: 'num', label: 'Surface area — ft²' },
       { id: 'size', type: 'select', label: 'Sheet size', opts: [['32', "4×8 (32 ft²)"], ['36', "4×9 (36 ft²)"], ['48', "4×12 (48 ft²)"]] },
@@ -397,7 +471,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'blocks', ic: '🧱', name: 'Concrete Block', desc: 'Block count for a wall area.',
+    id: 'blocks', ic: 'blocks', name: 'Concrete Block', desc: 'Block count for a wall area.',
     fields: [
       { id: 'area', type: 'num', label: 'Wall area — ft²' },
     ],
@@ -410,7 +484,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'boardfeet', ic: '🪵', name: 'Board Feet', desc: 'Lumber board-feet from dimensions.',
+    id: 'boardfeet', ic: 'boardfeet', name: 'Board Feet', desc: 'Lumber board-feet from dimensions.',
     fields: [
       { id: 't', type: 'num', label: 'Thickness (in)' },
       { id: 'w', type: 'num', label: 'Width (in)' },
@@ -427,7 +501,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'cost', ic: '💲', name: 'Cost per Unit', desc: 'Total cost from quantity × unit price.',
+    id: 'cost', ic: 'cost', name: 'Cost per Unit', desc: 'Total cost from quantity × unit price.',
     fields: [
       { id: 'qty', type: 'num', label: 'Quantity' },
       { id: 'price', type: 'num', label: 'Unit price ($)' },
@@ -443,7 +517,7 @@ const TOOLS = [
 
   { group: 'Special Functions' },
   {
-    id: 'trig', ic: '📊', name: 'Trigonometry', desc: 'Sine, cosine, tangent & their inverses.',
+    id: 'trig', ic: 'trig', name: 'Trigonometry', desc: 'Sine, cosine, tangent & their inverses.',
     fields: [
       { id: 'angle', type: 'angle', label: 'Angle (°) — for sin/cos/tan' },
       { id: 'ratio', type: 'num', label: 'Ratio — for arc functions', hint: 'optional' },
@@ -464,7 +538,7 @@ const TOOLS = [
     },
   },
   {
-    id: 'weight', ic: '⚖️', name: 'Weight per Volume', desc: 'Material weight from volume × density.',
+    id: 'weight', ic: 'weight', name: 'Weight per Volume', desc: 'Material weight from volume × density.',
     fields: [
       { id: 'cuft', type: 'num', label: 'Volume — ft³' },
       { id: 'density', type: 'select', label: 'Material', opts: [['150', 'Concrete (150 lb/ft³)'], ['165', 'Reinforced concrete (165)'], ['100', 'Gravel (100)'], ['62.4', 'Water (62.4)'], ['490', 'Steel (490)']] },
@@ -496,7 +570,7 @@ function showToolsHome() {
       html += `<div class="section-label">${t.group}</div><div class="tools-grid">`;
       open = true;
     } else {
-      html += `<div class="tool-card" data-tool="${t.id}"><div class="tic">${t.ic}</div><div class="tname">${t.name}</div><div class="tdesc">${t.desc}</div></div>`;
+      html += `<div class="tool-card" data-tool="${t.id}"><div class="tic">${svg(t.ic)}</div><div class="tname">${t.name}</div><div class="tdesc">${t.desc}</div></div>`;
     }
   }
   if (open) html += '</div>';
@@ -509,15 +583,23 @@ function openTool(id) {
   $('tools-home').style.display = 'none';
   const det = $('tools-detail'); det.style.display = 'block';
   let html = `<div class="back-bar"><button id="toolBack">‹ Tools</button></div>`;
-  html += `<div class="tool-detail"><h2>${t.ic} ${t.name}</h2><div class="desc">${t.desc}</div>`;
+  html += `<div class="tool-detail"><h2><span class="th">${svg(t.ic)}</span>${t.name}</h2><div class="desc">${t.desc}</div>`;
+  const fracOpts = '<option value="0">0</option>' +
+    fractionList(prefs.denom).map((fr) => `<option value="${fr.dec}">${fr.num}/${fr.den}</option>`).join('');
   for (const f of t.fields) {
     html += `<div class="field"><label>${f.label}</label>`;
     if (f.type === 'select') {
       html += `<select data-fid="${f.id}">` + f.opts.map((o) => `<option value="${o[0]}">${o[1]}</option>`).join('') + `</select>`;
+    } else if (f.type === 'len') {
+      // separate feet / inch / fraction inputs
+      html += `<div class="len-row" data-fid="${f.id}" data-ftype="len">
+        <div class="seg"><input data-part="ft" inputmode="numeric" placeholder="0"><span class="u">ft</span></div>
+        <div class="seg"><input data-part="in" inputmode="decimal" placeholder="0"><span class="u">in</span></div>
+        <div class="seg frac"><select data-part="frac">${fracOpts}</select></div>
+      </div>`;
     } else {
-      const ph = f.type === 'len' ? "e.g. 12' 6\"" : f.type === 'angle' ? 'degrees' : f.type === 'pitch' ? 'rise per 12' : 'number';
-      const im = (f.type === 'len') ? 'text' : 'decimal';
-      html += `<input data-fid="${f.id}" data-ftype="${f.type}" inputmode="${im}" placeholder="${ph}" />`;
+      const ph = f.type === 'angle' ? 'degrees' : f.type === 'pitch' ? 'rise per 12' : 'number';
+      html += `<input data-fid="${f.id}" data-ftype="${f.type}" inputmode="decimal" placeholder="${ph}" />`;
     }
     if (f.hint) html += `<div class="hint">${f.hint}</div>`;
     html += `</div>`;
@@ -531,15 +613,19 @@ function openTool(id) {
     const vals = {};
     det.querySelectorAll('[data-fid]').forEach((el) => {
       const fid = el.dataset.fid, ftype = el.dataset.ftype;
-      const raw = el.value.trim();
-      if (el.tagName === 'SELECT') { vals[fid] = el.value; return; }
-      if (raw === '') { vals[fid] = null; return; }   // blank => not provided
-      if (ftype === 'len') {
-        vals[fid] = parseEntry(raw).base;             // inches (scalar treated as inches)
-      } else {
-        const n = parseFloat(raw);
-        vals[fid] = isNaN(n) ? null : n;
+      if (ftype === 'len') {                          // compound feet / inch / fraction
+        const ft = el.querySelector('[data-part="ft"]').value.trim();
+        const inch = el.querySelector('[data-part="in"]').value.trim();
+        const frac = el.querySelector('[data-part="frac"]').value;
+        if (ft === '' && inch === '' && (!frac || +frac === 0)) { vals[fid] = null; return; }
+        vals[fid] = (parseFloat(ft) || 0) * 12 + (parseFloat(inch) || 0) + (parseFloat(frac) || 0);
+        return;
       }
+      if (el.tagName === 'SELECT') { vals[fid] = el.value; return; }
+      const raw = el.value.trim();
+      if (raw === '') { vals[fid] = null; return; }   // blank => not provided
+      const n = parseFloat(raw);
+      vals[fid] = isNaN(n) ? null : n;
     });
     let rows;
     try { rows = t.compute(vals); } catch (e) { rows = [{ label: 'Error', value: e.message }]; }
@@ -547,13 +633,17 @@ function openTool(id) {
     if (!rows || !rows.length) { rEl.innerHTML = '<div class="results-empty">—</div>'; return; }
     rEl.innerHTML = rows.map((r) => `<div class="row ${r.big ? 'big' : ''}"><span class="rl">${r.label}</span><span class="rv">${r.value}</span></div>`).join('');
   };
-  det.querySelectorAll('[data-fid]').forEach((el) => { el.addEventListener('input', recompute); el.addEventListener('change', recompute); });
+  det.querySelectorAll('input, select').forEach((el) => { el.addEventListener('input', recompute); el.addEventListener('change', recompute); });
   recompute();
 }
 
 /* ============================ settings ============================ */
 $('prefDenom').value = String(prefs.denom);
 $('prefDenom').addEventListener('change', (e) => { prefs.denom = +e.target.value; savePrefs(); renderCalc(); });
+$('prefTheme').value = prefs.theme;
+$('prefTheme').addEventListener('change', (e) => { prefs.theme = e.target.value; savePrefs(); applyTheme(); });
+$('prefHaptics').value = prefs.haptics;
+$('prefHaptics').addEventListener('change', (e) => { prefs.haptics = e.target.value; savePrefs(); });
 
 /* ============================ PWA ============================ */
 let deferredPrompt = null;
