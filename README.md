@@ -21,8 +21,13 @@ Live at **[16oc.pages.dev](https://16oc.pages.dev)**.
   mode** (bright yellow on black) for direct sun.
 - **Large touch targets** and **haptic feedback** — a short buzz confirms each key
   so you can work by feel, even with gloves.
+- **Haptic feedback** on every key — including an iOS-PWA workaround (a hidden
+  `<input type="checkbox" switch>` toggled via a label click) since Apple blocks
+  the Vibration API in PWAs.
 - **Screen stays awake** while the app is open (Wake Lock), so it won't sleep
   between measurements.
+- **Jobsite QR decal** — Settings → *Show jobsite QR decal* prints a scannable
+  code your crew can grab from the trailer or a toolbox.
 - **Fully offline** via a service worker — loads instantly in a basement or on a
   remote lot.
 
@@ -31,7 +36,9 @@ Live at **[16oc.pages.dev](https://16oc.pages.dev)**.
 **Dimensional math & conversions**
 - Feet-Inch-Fraction, Inch-Fraction, Yards
 - Decimal Feet / Decimal Inches, selectable preset fractions (1/2" – 1/64")
-- **Preset inch-fraction picker** (the `Frac` key) plus full metric (m, cm, mm)
+- **Type fractions** with the `Frac` key (distinct from ÷): e.g. `11" 1/8` is
+  `1 1 [Inch] 1 [Frac] 8`; plus full metric (m, cm, mm)
+- **Voice input** — tap the mic and say "five foot three plus two feet equals"
 - Degree / D:M:S display, `CONV` to cycle result units
 - Dimensioned arithmetic: length × length → area, area × length → volume, etc.
 - Paperless tape, 4 memories, backspace

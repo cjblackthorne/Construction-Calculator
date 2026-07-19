@@ -1,5 +1,5 @@
 /* 16OC service worker — offline-first cache */
-const CACHE = 'concalc-v2';
+const CACHE = 'concalc-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './js/units.js',
   './js/calc.js',
   './js/solvers.js',
+  './js/qr.js',
   './js/app.js',
   './manifest.json',
   './icons/favicon.svg',

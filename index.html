@@ -41,6 +41,7 @@
     <section class="screen active" id="screen-calc">
       <div class="calc-wrap">
         <div class="display">
+          <button id="micBtn" class="mic" data-icon="mic" aria-label="Voice input"></button>
           <div class="badges" id="badges"></div>
           <div class="entry" id="entry">&nbsp;</div>
           <div class="result" id="result">0</div>
@@ -146,6 +147,12 @@
           </select>
           <div class="hint">An audible click that mimics a physical keypad.</div>
         </div>
+        <h3>Share 16OC</h3>
+        <div class="field">
+          <button class="btn-primary" id="qrOpen" style="margin-top:0">Show jobsite QR decal</button>
+          <div class="hint">A printable QR code your crew can scan to get the app.</div>
+        </div>
+
         <h3>About</h3>
         <div class="about">
           <p><strong>16OC</strong> does real feet-inch-fraction math plus right-angle
@@ -176,19 +183,26 @@
     </div>
   </div>
 
-  <!-- Fraction sheet -->
-  <div class="sheet-backdrop" id="fracSheet">
+  <!-- Jobsite QR decal sheet -->
+  <div class="sheet-backdrop" id="qrSheet">
     <div class="sheet">
-      <h3>Insert fraction of an inch</h3>
-      <div class="frac-grid" id="fracGrid"></div>
-      <button class="close" id="fracClose">Close</button>
+      <h3>Jobsite QR decal</h3>
+      <div class="qr-holder" id="qrHolder"></div>
+      <p class="qr-cap">Scan to open the free 16OC calculator. Print it and tape it on the job trailer or toolbox so the whole crew can grab it.</p>
+      <button class="btn-primary" id="qrPrint">Print decal</button>
+      <button class="close" id="qrClose">Close</button>
     </div>
   </div>
 
   <div id="toast"></div>
   <div id="printArea"></div>
 
+  <!-- iOS PWA haptic workaround: toggling a hidden <input switch> via a label
+       click fires a light WebKit haptic where the Vibration API is unavailable -->
+  <label id="hapticLabel" aria-hidden="true"><input type="checkbox" id="hapticSwitch" switch tabindex="-1"></label>
+
   <script src="js/units.js"></script>
+  <script src="js/qr.js"></script>
   <script src="js/calc.js"></script>
   <script src="js/solvers.js"></script>
   <script src="js/app.js"></script>

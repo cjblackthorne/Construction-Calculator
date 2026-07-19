@@ -34,6 +34,7 @@ const ICN = {
   weight: '<path d="M6 9 h12 l1.4 10 h-14.8 Z"/><path d="M9 9 a3 3 0 0 1 6 0"/>',
   share: '<circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><line x1="8.1" y1="10.9" x2="15.9" y2="6.1"/><line x1="8.1" y1="13.1" x2="15.9" y2="17.9"/>',
   pdf: '<path d="M7 3 h7 l4 4 v13 a1 1 0 0 1 -1 1 h-9 a1 1 0 0 1 -1 -1 Z"/><path d="M14 3 v4 h4"/><line x1="9.5" y1="13" x2="14.5" y2="13"/><line x1="9.5" y1="16" x2="14.5" y2="16"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11 a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/>',
 };
 function svg(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">${ICN[name] || ''}</svg>`;
@@ -56,8 +57,15 @@ function applyTheme() {
 }
 applyTheme();
 
-/* short haptic confirmation on key press */
-function buzz() { if (prefs.haptics === 'on' && navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} } }
+/* short haptic confirmation on key press.
+ * Android/Chrome: Vibration API. iOS (no Vibration API): toggle a hidden
+ * <input type="checkbox" switch> via a label click, which fires a light WebKit
+ * haptic inside a user gesture — the only haptic path Apple allows in a PWA. */
+function buzz() {
+  if (prefs.haptics !== 'on') return;
+  if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} return; }
+  try { const l = document.getElementById('hapticLabel'); if (l) l.click(); } catch (e) {}
+}
 
 /* synthesized mechanical key-click (optional) */
 let audioCtx = null;
@@ -176,7 +184,7 @@ function renderCalc() {
 $('keypad').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   feedback();
-  if (b.dataset.act === 'frac') { openFracSheet(); return; }
+  if (b.dataset.act === 'frac') { calc.unit('/'); renderCalc(); return; }  // type a fraction: num / den
   if (b.dataset.d !== undefined) calc.inputDigit(b.dataset.d);
   else if (b.dataset.dot !== undefined) calc.inputDot();
   else if (b.dataset.unit !== undefined) calc.unit(b.dataset.unit);
@@ -243,8 +251,7 @@ function closeMemSheet() { $('memSheet').classList.remove('show'); }
 $('memClose').onclick = closeMemSheet;
 $('memSheet').addEventListener('click', (e) => { if (e.target.id === 'memSheet') closeMemSheet(); });
 
-/* ============================ preset fractions ============================ */
-/* reduced fractions k/denom for the current precision */
+/* reduced fractions k/denom for the current precision (used by tool inputs) */
 function fractionList(denom) {
   const out = [];
   for (let k = 1; k < denom; k++) {
@@ -253,19 +260,6 @@ function fractionList(denom) {
   }
   return out;
 }
-function openFracSheet() {
-  const grid = $('fracGrid'); grid.innerHTML = '';
-  fractionList(prefs.denom).forEach((f) => {
-    const btn = document.createElement('button');
-    btn.textContent = f.num + '/' + f.den;
-    btn.onclick = () => { feedback(); calc.insertFraction(f.num, f.den); renderCalc(); closeFracSheet(); };
-    grid.appendChild(btn);
-  });
-  $('fracSheet').classList.add('show');
-}
-function closeFracSheet() { $('fracSheet').classList.remove('show'); }
-$('fracClose').onclick = closeFracSheet;
-$('fracSheet').addEventListener('click', (e) => { if (e.target.id === 'fracSheet') closeFracSheet(); });
 
 /* ============================ tape ============================ */
 function persistTape() { if (sharedView) return; try { localStorage.setItem('concalc.tape', JSON.stringify(calc.tape.slice(0, 200))); } catch (e) {} }
@@ -331,6 +325,100 @@ $('sharedDismiss').onclick = () => {
   try { history.replaceState(null, '', appUrl()); } catch (e) {}
   try { const t = JSON.parse(localStorage.getItem('concalc.tape') || '[]'); calc.tape = Array.isArray(t) ? t : []; } catch (e) { calc.tape = []; }
   renderTape();
+};
+
+/* ============================ voice-activated math ============================ */
+const ONES = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, a: 1, an: 1 };
+const TENS = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+const DENOMS = { half: 2, halves: 2, third: 3, thirds: 3, quarter: 4, quarters: 4, fourth: 4, fourths: 4, fifth: 5, fifths: 5, sixth: 6, sixths: 6, seventh: 7, sevenths: 7, eighth: 8, eighths: 8, ninth: 9, ninths: 9, tenth: 10, tenths: 10, sixteenth: 16, sixteenths: 16 };
+const UNITS = { foot: "'", feet: "'", ft: "'", inch: '"', inches: '"', in: '"', yard: 'yd', yards: 'yd', meter: 'm', meters: 'm', metre: 'm', centimeter: 'cm', centimeters: 'cm', millimeter: 'mm', millimeters: 'mm' };
+const OPS = { plus: '+', add: '+', and: null, minus: '-', subtract: '-', less: '-', times: '*', multiply: '*', multiplied: '*', by: '*', divide: '/', divided: '/', over: '/', equal: '=', equals: '=', is: '=' };
+
+/* Convert a spoken transcript into calculator actions */
+function parseSpeech(t) {
+  const words = String(t).toLowerCase().replace(/[^a-z0-9\s.\-\/]/g, ' ').replace(/-/g, ' ').split(/\s+/).filter(Boolean);
+  const actions = [];
+  let cur = null;
+  const flush = () => { if (cur !== null) { actions.push({ digits: String(cur) }); cur = null; } };
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i], nx = words[i + 1] || '';
+    if (/^\d+(\.\d+)?$/.test(w)) { flush(); actions.push({ digits: w }); continue; }
+    if (/^\d+\/\d+$/.test(w)) { flush(); const [a, b] = w.split('/'); actions.push({ frac: [+a, +b] }); continue; }
+    // two-word denominators
+    if (w === 'thirty' && /second/.test(nx)) { actions.push({ frac: [cur !== null ? cur : 1, 32] }); cur = null; i++; continue; }
+    if (w === 'sixty' && /(fourth|forth)/.test(nx)) { actions.push({ frac: [cur !== null ? cur : 1, 64] }); cur = null; i++; continue; }
+    if (w in DENOMS) { actions.push({ frac: [cur !== null ? cur : 1, DENOMS[w]] }); cur = null; continue; }
+    if (w in ONES) { cur = (cur || 0) + ONES[w]; continue; }
+    if (w in TENS) { cur = (cur || 0) + TENS[w]; continue; }
+    if (w === 'hundred') { cur = (cur || 1) * 100; continue; }
+    if (w === 'point' || w === 'decimal') { flush(); actions.push({ dot: true }); continue; }
+    if (w in UNITS) { flush(); actions.push({ unit: UNITS[w] }); continue; }
+    if (w in OPS) { flush(); if (OPS[w] === null) continue; actions.push(OPS[w] === '=' ? { eq: true } : { op: OPS[w] }); continue; }
+    // unknown word: ignore
+  }
+  flush();
+  return actions;
+}
+function applyVoice(actions) {
+  calc.allClear();
+  for (const a of actions) {
+    if (a.digits) for (const ch of a.digits) { ch === '.' ? calc.inputDot() : calc.inputDigit(ch); }
+    else if (a.dot) calc.inputDot();
+    else if (a.unit) calc.unit(a.unit);
+    else if (a.frac) calc.insertFraction(a.frac[0], a.frac[1]);
+    else if (a.op) calc.operator(a.op);
+    else if (a.eq) calc.equals();
+  }
+}
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, listening = false;
+if (!SR) $('micBtn').classList.add('hidden');
+$('micBtn').onclick = () => {
+  if (!SR) { toast('Voice input not supported here'); return; }
+  if (listening) { try { recog.stop(); } catch (e) {} return; }
+  recog = new SR();
+  recog.lang = 'en-US'; recog.interimResults = false; recog.maxAlternatives = 1;
+  listening = true; $('micBtn').classList.add('listening'); toast('Listening — say a calculation');
+  recog.onresult = (e) => {
+    const transcript = e.results[0][0].transcript.trim();
+    const actions = parseSpeech(transcript);
+    if (!actions.length) { toast('Heard: "' + transcript + '"'); return; }
+    applyVoice(actions);
+    renderCalc();
+    if (actions.some((a) => a.eq)) { persistTape(); renderTape(); }
+    toast('“' + transcript + '”');
+  };
+  recog.onerror = () => { toast('Didn’t catch that'); };
+  recog.onend = () => { listening = false; $('micBtn').classList.remove('listening'); };
+  try { recog.start(); } catch (e) { listening = false; $('micBtn').classList.remove('listening'); }
+};
+
+/* ============================ QR decal ============================ */
+const APP_SHARE_URL = 'https://16oc.pages.dev';
+function qrSVG(text, ec) {
+  const q = window.QR.generate(text, ec || 'Q');
+  const n = q.size, quiet = 4, dim = n + quiet * 2;
+  let rects = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+    if (q.modules[r][c]) rects += `<rect x="${c + quiet}" y="${r + quiet}" width="1" height="1"/>`;
+  return `<svg viewBox="0 0 ${dim} ${dim}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect width="${dim}" height="${dim}" fill="#fff"/><g fill="#000">${rects}</g></svg>`;
+}
+function openQrSheet() {
+  $('qrHolder').innerHTML = qrSVG(APP_SHARE_URL, 'Q');
+  $('qrSheet').classList.add('show');
+}
+function closeQrSheet() { $('qrSheet').classList.remove('show'); }
+$('qrOpen').onclick = openQrSheet;
+$('qrClose').onclick = closeQrSheet;
+$('qrSheet').addEventListener('click', (e) => { if (e.target.id === 'qrSheet') closeQrSheet(); });
+$('qrPrint').onclick = () => {
+  $('printArea').innerHTML =
+    `<div class="qr-decal">${qrSVG(APP_SHARE_URL, 'Q')}` +
+    `<div class="dt">16OC</div>` +
+    `<div class="ds">Free construction calculator — scan to open</div>` +
+    `<div class="du">${escapeHtml(APP_SHARE_URL.replace('https://', ''))}</div></div>`;
+  window.print();
 };
 
 /* ============================ tab navigation ============================ */
